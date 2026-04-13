@@ -1,0 +1,312 @@
+{% extends 'base.html' %}
+
+{% block title %}Dr. {{ doctor.name }}{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        
+        <!-- Doctor Info Card -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm p-4 text-center">
+                
+                <div style="width:100px; height:100px; background:#EEF2FF;
+                            border-radius:50%; display:flex;
+                            align-items:center; justify-content:center;
+                            font-size:3.5rem; margin:auto;">
+                    👨‍⚕️
+                </div>
+
+                <h4 class="fw-bold mt-3">Dr. {{ doctor.name }}</h4>
+
+                <p class="text-primary fw-semibold">
+                    {{ doctor.specialization.icon }} {{ doctor.specialization.name }}
+                </p>
+
+                <hr>
+
+                <div class="text-start">
+                    <p>
+                        <i class="bi bi-award me-2 text-primary"></i>
+                        {{ doctor.qualification }}
+                    </p>
+
+                    <p>
+                        <i class="bi bi-clock me-2 text-primary"></i>
+                        {{ doctor.experience }} years experience
+                    </p>
+
+                    <p>
+                        <i class="bi bi-currency-rupee text-primary"></i>
+                        {{ doctor.fee }} consultation fee
+                    </p>
+                </div>
+
+                <div class="alert alert-info text-start small mt-2">
+                    {{ doctor.about }}
+                </div>
+
+                {% if doctor.available %}
+                <span class="badge bg-success mt-2">✓ Available</span>
+                {% else %}
+                <span class="badge bg-danger mt-2">✗ Not Available</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Booking Slots -->
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm p-4">
+                <h5 class="fw-bold text-primary mb-4">📅 Available Slots</h5>
+                
+                {% if user.is_authenticated %}
+                
+                {% if slots_by_date %}
+                
+                {% for date, slots in slots_by_date.items %}
+                <h6 class="fw-semibold text-muted mb-2">📆 {{ date }}</h6>
+
+                <div class="d-flex flex-wrap gap-2 mb-4">
+                    {% for slot in slots %}
+                    <button class="btn btn-outline-primary slot-btn"
+        data-slot-id="{{ slot.id }}"
+        onclick="lockAndSelect(this, {{ slot.id }})">
+    {{ slot.time|time:"g:i A" }}
+</button>
+                    {% endfor %}
+                </div>
+                {% endfor %}
+
+                <!-- Booking Form -->
+                <!-- Booking Form -->
+<div id="bookingForm" style="display:none;" class="mt-3">
+    <div id="lockTimer" class="alert alert-warning small py-2" style="display:none;"></div>
+    <div class="mb-3">
+        <label class="form-label fw-semibold">
+            Reason for visit (optional)
+        </label>
+        <textarea id="visitNotes" class="form-control" rows="2"
+                  placeholder="Describe your symptoms briefly...">
+        </textarea>
+    </div>
+    <!-- Add this inside bookingForm div, before textarea -->
+<input type="hidden" id="selectedSlotId" value="">
+    <button class="btn btn-primary fw-bold w-100 py-2"
+            onclick="initiatePayment()">
+        💳 Proceed to Payment — ₹{{ doctor.fee }}
+    </button>
+</div>
+
+<!-- Payment Status -->
+<div id="paymentMsg" class="mt-3" style="display:none;"></div>
+
+                {% else %}
+                <div class="text-center py-4 text-muted">
+                    <span style="font-size:3rem;">📭</span>
+                    <p class="mt-2">No slots available right now</p>
+                </div>
+                {% endif %}
+
+                {% else %}
+                <div class="alert alert-warning">
+                    Please <a href="/login/" class="fw-bold">login</a> to book an appointment
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+            {% for msg in messages %}
+            <div class="alert alert-{{ msg.tags }} mt-3">
+                {{ msg }}
+            </div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+
+<script>
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(
+                    cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Replace selectSlot function with this:
+async function lockAndSelect(btn, slotId) {
+    // Visual feedback
+    document.querySelectorAll('.slot-btn').forEach(b => {
+        b.classList.remove('btn-primary');
+        b.classList.add('btn-outline-primary');
+        b.disabled = false;
+    });
+    btn.innerHTML = '⏳ Locking...';
+    btn.disabled = true;
+
+    try {
+        const res = await fetch('/lock-slot/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ slot_id: slotId })
+        });
+        const data = await res.json();
+
+        if (data.status === 'locked_ok') {
+            btn.innerHTML = '✓ Selected';
+            btn.classList.remove('btn-outline-primary');
+            btn.classList.add('btn-primary');
+            document.getElementById('selectedSlotId').value = slotId;
+            document.getElementById('bookingForm').style.display = 'block';
+            document.getElementById('bookingForm').scrollIntoView({ behavior: 'smooth' });
+            // Start 10min countdown
+            startLockTimer(btn);
+        } else {
+            btn.innerHTML = '🔒 Taken';
+            btn.classList.add('btn-danger');
+            alert(data.message || 'Slot not available');
+        }
+    } catch(e) {
+        btn.innerHTML = '❌ Error';
+        btn.disabled = false;
+    }
+}
+
+function startLockTimer(btn) {
+    let seconds = 600; // 10 minutes
+    const timerEl = document.getElementById('lockTimer');
+    timerEl.style.display = 'block';
+    const interval = setInterval(() => {
+        seconds--;
+        const m = Math.floor(seconds / 60);
+        const s = seconds % 60;
+        timerEl.textContent = `⏱️ Slot held for ${m}:${s.toString().padStart(2,'0')} — complete payment before it expires`;
+        if (seconds <= 0) {
+            clearInterval(interval);
+            timerEl.textContent = '⚠️ Lock expired. Please reselect your slot.';
+            btn.innerHTML = '🔒 Expired';
+            document.getElementById('bookingForm').style.display = 'none';
+        }
+    }, 1000);
+}
+
+async function initiatePayment() {
+    const slotId = document.getElementById('selectedSlotId').value;
+    console.log('Booking slot:', slotId); // debug check
+    
+    if (!slotId) {
+        alert('Please select a time slot first!');
+        return;
+    }
+    
+    const notes = document.getElementById('visitNotes').value;
+    
+    try {
+        const res = await fetch('/create-payment/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({
+                slot_id: slotId,
+                notes: notes
+            })
+        });
+        
+        const order = await res.json();
+        
+        if (order.error) {
+            document.getElementById('paymentMsg').style.display = 'block';
+            document.getElementById('paymentMsg').innerHTML = 
+                `<div class="alert alert-danger">❌ ${order.error}</div>`;
+            return;
+        }
+        
+        const options = {
+            key: order.key,
+            amount: order.amount,
+            currency: order.currency,
+            name: 'DocPro',
+            description: `Appointment with ${order.doctor_name}`,
+            order_id: order.order_id,
+            prefill: {
+                name: order.user_name,
+                email: order.user_email,
+            },
+            theme: { color: '#2B5CE6' },
+            
+            handler: async function(response) {
+                const verifyRes = await fetch('/payment-success/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify({
+                        razorpay_payment_id: response.razorpay_payment_id,
+                        razorpay_order_id: response.razorpay_order_id,
+                        razorpay_signature: response.razorpay_signature,
+                        slot_id: slotId,
+                        notes: notes
+                    })
+                });
+                
+                const result = await verifyRes.json();
+                document.getElementById('paymentMsg').style.display = 'block';
+                
+                if (result.status === 'success') {
+                    document.getElementById('paymentMsg').innerHTML = 
+                        `<div class="alert alert-success">
+                            ✅ Payment successful! Appointment confirmed!<br>
+                            Check your email for confirmation.<br>
+                            <a href="/appointments/" class="btn btn-primary btn-sm mt-2">
+                                View My Appointments
+                            </a>
+                        </div>`;
+                    document.getElementById('bookingForm').style.display = 'none';
+                } else {
+                    document.getElementById('paymentMsg').innerHTML = 
+                        `<div class="alert alert-danger">❌ ${result.message}</div>`;
+                }
+            },
+            
+            modal: {
+                ondismiss: function() {
+                    document.getElementById('paymentMsg').style.display = 'block';
+                    document.getElementById('paymentMsg').innerHTML = 
+                        '<div class="alert alert-warning">⚠️ Payment cancelled!</div>';
+                }
+            }
+        };
+        
+        const rzp = new Razorpay(options);
+        rzp.open();
+        
+    } catch(err) {
+        console.error(err);
+        document.getElementById('paymentMsg').style.display = 'block';
+        document.getElementById('paymentMsg').innerHTML = 
+            '<div class="alert alert-danger">❌ Something went wrong!</div>';
+    }
+}
+</script>
+{% endblock %}

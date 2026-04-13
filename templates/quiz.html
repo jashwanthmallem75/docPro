@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Health Quiz{% endblock %}
+
+{% block content %}
+<div style="background: linear-gradient(135deg, #2B5CE6, #1a3aa0);" class="py-5 text-white text-center">
+    <h1 class="fw-bold">🧠 Health Awareness Quiz</h1>
+    <p class="fs-5">Test your knowledge — powered by AI!</p>
+</div>
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+
+            <!-- Score Bar -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <span class="fw-bold text-primary fs-5">Score: <span id="score">0</span></span>
+                <span class="text-muted">Question <span id="qNum">1</span> of ∞</span>
+                <span class="fw-bold text-success">✅ <span id="correct">0</span> &nbsp; ❌ <span id="wrong">0</span></span>
+            </div>
+
+            <!-- Quiz Card -->
+            <div class="card border-0 shadow-lg p-4" id="quizCard">
+                <div id="topicBadge" class="mb-3"></div>
+                <div id="loadingState" class="text-center py-5">
+                    <div class="spinner-border text-primary mb-3" role="status"></div>
+                    <p class="text-muted">AI is generating your question...</p>
+                </div>
+
+                <div id="questionState" style="display:none;">
+                    <h5 class="fw-bold mb-4" id="questionText"></h5>
+                    <div id="optionsContainer" class="d-grid gap-2"></div>
+                </div>
+
+                <div id="resultState" style="display:none;" class="text-center">
+                    <div id="resultIcon" class="mb-3" style="font-size:3rem;"></div>
+                    <h5 id="resultText" class="fw-bold mb-2"></h5>
+                    <div class="alert alert-info text-start mt-3" id="explanationBox">
+                        <strong>💡 Explanation:</strong>
+                        <p id="explanationText" class="mb-0 mt-1"></p>
+                    </div>
+                    <button class="btn btn-primary fw-bold px-5 mt-3" onclick="loadQuestion()">
+                        Next Question ➡️
+                    </button>
+                </div>
+            </div>
+
+            <!-- Quit button -->
+            <div class="text-center mt-4">
+                <a href="/" class="btn btn-outline-secondary">← Back to Home</a>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let score = 0, correct = 0, wrong = 0, qNum = 1;
+let currentQuestion = null;
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+async function loadQuestion() {
+    document.getElementById('loadingState').style.display = 'block';
+    document.getElementById('questionState').style.display = 'none';
+    document.getElementById('resultState').style.display = 'none';
+    document.getElementById('topicBadge').innerHTML = '';
+
+    try {
+        const res = await fetch('/quiz/question/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({})
+        });
+        const data = await res.json();
+
+        if (data.status === 'success') {
+            currentQuestion = data.question;
+            showQuestion(currentQuestion);
+        } else {
+            showError();
+        }
+    } catch(e) {
+        showError();
+    }
+}
+
+function showQuestion(q) {
+    document.getElementById('loadingState').style.display = 'none';
+    document.getElementById('questionState').style.display = 'block';
+    document.getElementById('qNum').textContent = qNum;
+
+    // Topic badge
+    const topicColors = {
+        'diet': 'success', 'exercise': 'warning', 'heart': 'danger',
+        'mental': 'info', 'sleep': 'secondary', 'diabetes': 'primary'
+    };
+    const topicKey = Object.keys(topicColors).find(k => q.topic.includes(k)) || 'primary';
+    document.getElementById('topicBadge').innerHTML = 
+        `<span class="badge bg-${topicColors[topicKey]} text-capitalize">${q.topic}</span>`;
+
+    document.getElementById('questionText').textContent = q.question;
+
+    const container = document.getElementById('optionsContainer');
+    container.innerHTML = '';
+
+    q.options.forEach(opt => {
+        const btn = document.createElement('button');
+        btn.className = 'btn btn-outline-primary text-start fw-semibold py-3';
+        btn.textContent = opt;
+        btn.onclick = () => checkAnswer(opt, btn);
+        container.appendChild(btn);
+    });
+}
+
+function checkAnswer(selected, btn) {
+    // Disable all buttons
+    document.querySelectorAll('#optionsContainer button').forEach(b => b.disabled = true);
+
+    const isCorrect = selected === currentQuestion.correct;
+
+    if (isCorrect) {
+        btn.classList.replace('btn-outline-primary', 'btn-success');
+        score += 10;
+        correct++;
+        document.getElementById('score').textContent = score;
+        document.getElementById('correct').textContent = correct;
+    } else {
+        btn.classList.replace('btn-outline-primary', 'btn-danger');
+        wrong++;
+        document.getElementById('wrong').textContent = wrong;
+        // Highlight correct answer
+        document.querySelectorAll('#optionsContainer button').forEach(b => {
+            if (b.textContent === currentQuestion.correct) {
+                b.classList.replace('btn-outline-primary', 'btn-success');
+            }
+        });
+    }
+
+    // Show result after short delay
+    setTimeout(() => {
+        document.getElementById('questionState').style.display = 'none';
+        document.getElementById('resultState').style.display = 'block';
+        document.getElementById('resultIcon').textContent = isCorrect ? '🎉' : '😔';
+        document.getElementById('resultText').textContent = isCorrect 
+            ? 'Correct! Well done!' : `Wrong! The answer was: ${currentQuestion.correct}`;
+        document.getElementById('explanationText').textContent = currentQuestion.explanation;
+        qNum++;
+    }, 800);
+}
+
+function showError() {
+    document.getElementById('loadingState').innerHTML = 
+        '<p class="text-danger">❌ Failed to load question. <button class="btn btn-sm btn-primary ms-2" onclick="loadQuestion()">Retry</button></p>';
+}
+
+// Start on page load
+loadQuestion();
+</script>
+{% endblock %}

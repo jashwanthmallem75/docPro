@@ -1,0 +1,476 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Doctor Dashboard — DocPro{% endblock %}
+
+{% block content %}
+
+<!-- Dashboard wrapper -->
+<div style="background: linear-gradient(160deg, #0d1b2e 0%, #1B4F8A 50%, #1595AA 100%);
+            min-height: 100vh; padding: 0 0 60px 0;">
+
+  <!-- Top Header Bar -->
+  <div style="background: rgba(0,0,0,0.25); backdrop-filter: blur(10px);
+              border-bottom: 1px solid rgba(255,255,255,0.1); padding: 24px 0;">
+    <div class="container">
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
+
+        <div class="d-flex align-items-center gap-3">
+          <!-- Doctor avatar -->
+          <div style="width:52px; height:52px; border-radius:50%;
+                      background: linear-gradient(135deg, rgba(255,255,255,0.25), rgba(255,255,255,0.1));
+                      border: 2px solid rgba(255,255,255,0.4);
+                      display:flex; align-items:center; justify-content:center;
+                      font-size:1.4rem; color:#fff; font-weight:700; flex-shrink:0;">
+            {{ doctor.name|slice:":1"|upper }}
+          </div>
+          <div>
+            <h5 class="text-white fw-bold mb-0" style="font-family:'Playfair Display',serif;">
+              Dr. {{ doctor.name }}
+            </h5>
+            <small style="color:rgba(255,255,255,0.65);">
+              {{ doctor.specialization.name }}
+              &nbsp;·&nbsp;
+              <i class="bi bi-calendar3 me-1"></i>{{ selected_date|date:"l, d F Y" }}
+            </small>
+          </div>
+        </div>
+
+        <!-- Date picker -->
+        <form method="get" class="d-flex gap-2 align-items-center">
+          <input type="date" name="date" value="{{ selected_date|date:'Y-m-d' }}"
+                 class="form-control form-control-sm"
+                 style="background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25);
+                        color:#fff; border-radius:8px; font-size:0.88rem; padding:8px 12px;
+                        min-width:160px;">
+          <button type="submit" class="btn btn-sm btn-light fw-semibold px-4"
+                  style="border-radius:8px;">
+            <i class="bi bi-arrow-right me-1"></i>View
+          </button>
+        </form>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="container mt-4">
+
+    <!-- ── STAT CARDS ── -->
+    <div class="row g-3 mb-4">
+
+      <div class="col-6 col-md-3">
+        <div style="background:rgba(255,255,255,0.09); backdrop-filter:blur(12px);
+                    border:1px solid rgba(255,255,255,0.15); border-radius:16px;
+                    padding:20px 16px; text-align:center;">
+          <div style="font-size:1.8rem; margin-bottom:6px;">📋</div>
+          <div style="font-size:2rem; font-weight:800; color:#fff;
+                      font-family:'Playfair Display',serif; line-height:1;">
+            {{ total_today }}
+          </div>
+          <div style="color:rgba(255,255,255,0.55); font-size:0.82rem; margin-top:4px;">
+            Total Today
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div style="background:rgba(56,161,105,0.18); backdrop-filter:blur(12px);
+                    border:1px solid rgba(56,161,105,0.3); border-radius:16px;
+                    padding:20px 16px; text-align:center;">
+          <div style="font-size:1.8rem; margin-bottom:6px;">✅</div>
+          <div style="font-size:2rem; font-weight:800; color:#68D391;
+                      font-family:'Playfair Display',serif; line-height:1;">
+            {{ confirmed }}
+          </div>
+          <div style="color:rgba(255,255,255,0.55); font-size:0.82rem; margin-top:4px;">
+            Confirmed
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div style="background:rgba(10,191,163,0.18); backdrop-filter:blur(12px);
+                    border:1px solid rgba(10,191,163,0.3); border-radius:16px;
+                    padding:20px 16px; text-align:center;">
+          <div style="font-size:1.8rem; margin-bottom:6px;">🏁</div>
+          <div style="font-size:2rem; font-weight:800; color:#4FD1C5;
+                      font-family:'Playfair Display',serif; line-height:1;">
+            {{ completed }}
+          </div>
+          <div style="color:rgba(255,255,255,0.55); font-size:0.82rem; margin-top:4px;">
+            Completed
+          </div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-3">
+        <div style="background:rgba(229,62,62,0.15); backdrop-filter:blur(12px);
+                    border:1px solid rgba(229,62,62,0.25); border-radius:16px;
+                    padding:20px 16px; text-align:center;">
+          <div style="font-size:1.8rem; margin-bottom:6px;">❌</div>
+          <div style="font-size:2rem; font-weight:800; color:#FC8181;
+                      font-family:'Playfair Display',serif; line-height:1;">
+            {{ cancelled }}
+          </div>
+          <div style="color:rgba(255,255,255,0.55); font-size:0.82rem; margin-top:4px;">
+            Cancelled
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ── TODAY'S SCHEDULE ── -->
+    <div style="background:rgba(255,255,255,0.06); backdrop-filter:blur(14px);
+                border:1px solid rgba(255,255,255,0.12); border-radius:20px;
+                margin-bottom:24px; overflow:hidden;">
+
+      <!-- Card header -->
+      <div style="padding:20px 28px; border-bottom:1px solid rgba(255,255,255,0.1);
+                  display:flex; align-items:center; justify-content:space-between;">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-calendar-week" style="color:#7EB8F7; font-size:1.1rem;"></i>
+          <h5 class="mb-0 fw-bold" style="color:#fff; font-family:'Playfair Display',serif;">
+            Schedule for {{ selected_date|date:"d F Y" }}
+          </h5>
+        </div>
+        <span style="background:rgba(126,184,247,0.2); color:#7EB8F7; border-radius:20px;
+                     padding:4px 14px; font-size:0.8rem; font-weight:600;">
+          {{ total_today }} appointment{{ total_today|pluralize }}
+        </span>
+      </div>
+
+      <div style="padding:8px 0;">
+        {% if appointments %}
+        <div class="table-responsive">
+          <table class="table table-borderless mb-0" style="color:#fff;">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <th style="color:rgba(255,255,255,0.45); font-weight:500;
+                           font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; padding:12px 28px;">Time</th>
+                <th style="color:rgba(255,255,255,0.45); font-weight:500;
+                           font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; padding:12px 16px;">Patient</th>
+                <th style="color:rgba(255,255,255,0.45); font-weight:500;
+                           font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; padding:12px 16px;">Reason</th>
+                <th style="color:rgba(255,255,255,0.45); font-weight:500;
+                           font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; padding:12px 16px;">Payment</th>
+                <th style="color:rgba(255,255,255,0.45); font-weight:500;
+                           font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; padding:12px 16px;">Status</th>
+                <th style="color:rgba(255,255,255,0.45); font-weight:500;
+                           font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; padding:12px 16px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for apt in appointments %}
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);
+                         transition:background 0.15s;"
+                  onmouseover="this.style.background='rgba(255,255,255,0.04)'"
+                  onmouseout="this.style.background='transparent'">
+
+                <!-- Time -->
+                <td style="padding:16px 28px; vertical-align:middle;">
+                  <span style="background:rgba(30,110,200,0.35); color:#7EB8F7;
+                               border-radius:20px; padding:5px 14px;
+                               font-size:0.84rem; font-weight:600; white-space:nowrap;">
+                    <i class="bi bi-clock me-1"></i>{{ apt.slot.time|time:"g:i A" }}
+                  </span>
+                </td>
+
+                <!-- Patient -->
+                <td style="padding:16px; vertical-align:middle;">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div style="width:34px; height:34px; border-radius:50%;
+                                background:rgba(255,255,255,0.15);
+                                display:flex; align-items:center; justify-content:center;
+                                font-size:0.85rem; font-weight:700; color:#fff; flex-shrink:0;">
+                      {{ apt.patient.user.first_name|slice:":1"|upper }}
+                    </div>
+                    <div>
+                      <div style="font-weight:600; font-size:0.9rem;">
+                        {{ apt.patient.user.get_full_name }}
+                      </div>
+                      <div style="color:rgba(255,255,255,0.45); font-size:0.78rem;">
+                        {{ apt.patient.user.email }}
+                      </div>
+                    </div>
+                  </div>
+                </td>
+
+                <!-- Reason/Notes -->
+                <td style="padding:16px; vertical-align:middle; max-width:200px;">
+                  <span style="color:rgba(255,255,255,0.55); font-size:0.85rem;">
+                    {{ apt.notes|default:"—"|truncatechars:40 }}
+                  </span>
+                </td>
+
+                <!-- Payment -->
+                <td style="padding:16px; vertical-align:middle;">
+                  {% if apt.payment_status == 'Paid' %}
+                  <span style="background:rgba(56,161,105,0.25); color:#68D391;
+                               border-radius:20px; padding:4px 12px;
+                               font-size:0.8rem; font-weight:600;">
+                    <i class="bi bi-check-circle me-1"></i>Paid
+                  </span>
+                  {% else %}
+                  <span style="background:rgba(246,173,85,0.25); color:#F6AD55;
+                               border-radius:20px; padding:4px 12px;
+                               font-size:0.8rem; font-weight:600;">
+                    <i class="bi bi-clock me-1"></i>Pending
+                  </span>
+                  {% endif %}
+                </td>
+
+                <!-- Status -->
+                <td style="padding:16px; vertical-align:middle;">
+                  {% if apt.status == 'Confirmed' %}
+                  <span style="background:rgba(30,110,200,0.3); color:#7EB8F7;
+                               border-radius:20px; padding:4px 12px;
+                               font-size:0.8rem; font-weight:600;">Confirmed</span>
+                  {% elif apt.status == 'Completed' %}
+                  <span style="background:rgba(10,191,163,0.25); color:#4FD1C5;
+                               border-radius:20px; padding:4px 12px;
+                               font-size:0.8rem; font-weight:600;">Completed</span>
+                  {% else %}
+                  <span style="background:rgba(229,62,62,0.25); color:#FC8181;
+                               border-radius:20px; padding:4px 12px;
+                               font-size:0.8rem; font-weight:600;">Cancelled</span>
+                  {% endif %}
+                </td>
+
+                <!-- Action -->
+                <td style="padding:16px; vertical-align:middle;">
+                  {% if apt.status == 'Confirmed' %}
+                  <a href="/appointments/complete/{{ apt.id }}/"
+                     onclick="return confirm('Mark this appointment as completed?')"
+                     style="background:rgba(10,191,163,0.2); color:#4FD1C5;
+                            border:1px solid rgba(10,191,163,0.3); border-radius:8px;
+                            padding:6px 14px; font-size:0.82rem; font-weight:600;
+                            text-decoration:none; transition:all 0.2s; white-space:nowrap;"
+                     onmouseover="this.style.background='rgba(10,191,163,0.35)'"
+                     onmouseout="this.style.background='rgba(10,191,163,0.2)'">
+                    <i class="bi bi-check2 me-1"></i>Mark Done
+                  </a>
+                  {% else %}
+                  <span style="color:rgba(255,255,255,0.25); font-size:0.82rem;">—</span>
+                  {% endif %}
+                </td>
+
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        {% else %}
+        <div style="text-align:center; padding:56px 20px;">
+          <div style="font-size:3.5rem; margin-bottom:12px; opacity:0.4;">🗓️</div>
+          <p style="color:rgba(255,255,255,0.4); font-size:0.95rem; margin:0;">
+            No appointments scheduled for this date
+          </p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── UPCOMING 7 DAYS ── -->
+    {% if upcoming %}
+    <div style="background:rgba(255,255,255,0.06); backdrop-filter:blur(14px);
+                border:1px solid rgba(255,255,255,0.12); border-radius:20px; overflow:hidden;">
+
+      <div style="padding:20px 28px; border-bottom:1px solid rgba(255,255,255,0.1);">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-binoculars" style="color:#A78BFA; font-size:1.1rem;"></i>
+          <h5 class="mb-0 fw-bold" style="color:#fff; font-family:'Playfair Display',serif;">
+            Upcoming — Next 7 Days
+          </h5>
+        </div>
+      </div>
+
+      <div style="padding:20px 28px;">
+        <div class="row g-3">
+          {% for apt in upcoming %}
+          <div class="col-md-6 col-lg-4">
+            <div style="background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1);
+                        border-radius:14px; padding:16px 18px;
+                        transition:background 0.2s;"
+                 onmouseover="this.style.background='rgba(255,255,255,0.09)'"
+                 onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+
+              <div class="d-flex justify-content-between align-items-start mb-2">
+                <div style="font-weight:600; color:#fff; font-size:0.92rem;">
+                  {{ apt.patient.user.get_full_name }}
+                </div>
+                <span style="background:rgba(167,139,250,0.2); color:#A78BFA;
+                             border-radius:20px; padding:3px 10px;
+                             font-size:0.75rem; font-weight:600; white-space:nowrap;">
+                  {{ apt.slot.date|date:"d M" }}
+                </span>
+              </div>
+
+              <div style="color:rgba(255,255,255,0.45); font-size:0.82rem; margin-bottom:6px;">
+                <i class="bi bi-clock me-1"></i>{{ apt.slot.time|time:"g:i A" }}
+                &nbsp;&nbsp;
+                <i class="bi bi-chat-left-text me-1"></i>{{ apt.notes|default:"No notes"|truncatechars:28 }}
+              </div>
+
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+    </div>
+    {% endif %}
+
+    <!-- ── SLOT MANAGEMENT ── -->
+    <div style="background:rgba(255,255,255,0.06); backdrop-filter:blur(14px);
+                border:1px solid rgba(255,255,255,0.12); border-radius:20px;
+                margin-top:24px; overflow:hidden;">
+
+      <div style="padding:20px 28px; border-bottom:1px solid rgba(255,255,255,0.1);
+                  display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px;">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-clock-history" style="color:#F6AD55; font-size:1.1rem;"></i>
+          <h5 class="mb-0 fw-bold" style="color:#fff; font-family:'Playfair Display',serif;">
+            Manage Time Slots
+          </h5>
+        </div>
+        <button onclick="toggleAddSlot()" 
+                style="background:rgba(246,173,85,0.2); color:#F6AD55;
+                       border:1px solid rgba(246,173,85,0.4); border-radius:10px;
+                       padding:8px 20px; font-size:0.85rem; font-weight:600; cursor:pointer;">
+          <i class="bi bi-plus-lg me-1"></i> Add New Slot
+        </button>
+      </div>
+
+      <!-- ADD SLOT FORM (hidden by default) -->
+      <div id="addSlotForm" style="display:none; padding:24px 28px; border-bottom:1px solid rgba(255,255,255,0.08);
+                                    background:rgba(246,173,85,0.05);">
+        <h6 style="color:#F6AD55; margin-bottom:16px;">
+          <i class="bi bi-calendar-plus me-2"></i>Add a New Time Slot
+        </h6>
+        <form method="post" action="/doctor/add-slot/">
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label style="color:rgba(255,255,255,0.65); font-size:0.82rem; margin-bottom:6px; display:block;">
+                Date
+              </label>
+              <input type="date" name="date" required
+                     style="width:100%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
+                            color:#fff; border-radius:10px; padding:10px 14px; font-size:0.9rem;"
+                     min="{{ today|date:'Y-m-d' }}">
+            </div>
+            <div class="col-md-4">
+              <label style="color:rgba(255,255,255,0.65); font-size:0.82rem; margin-bottom:6px; display:block;">
+                Time
+              </label>
+              <input type="time" name="time" required
+                     style="width:100%; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2);
+                            color:#fff; border-radius:10px; padding:10px 14px; font-size:0.9rem;">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+              <button type="submit"
+                      style="width:100%; background:linear-gradient(135deg,#F6AD55,#ED8936);
+                             color:#1a1a1a; border:none; border-radius:10px;
+                             padding:10px 20px; font-weight:700; font-size:0.9rem; cursor:pointer;">
+                <i class="bi bi-plus-circle me-1"></i> Add Slot
+              </button>
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- EXISTING SLOTS TABLE -->
+      <div style="padding:20px 28px;">
+        <h6 style="color:rgba(255,255,255,0.5); font-size:0.8rem; text-transform:uppercase;
+                   letter-spacing:0.8px; margin-bottom:16px;">
+          Upcoming Available Slots
+        </h6>
+        {% if all_slots %}
+        <div class="table-responsive">
+          <table class="table table-borderless mb-0" style="color:#fff;">
+            <thead>
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.08);">
+                <th style="color:rgba(255,255,255,0.45); font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; font-weight:500; padding:8px 12px;">Date</th>
+                <th style="color:rgba(255,255,255,0.45); font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; font-weight:500; padding:8px 12px;">Time</th>
+                <th style="color:rgba(255,255,255,0.45); font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; font-weight:500; padding:8px 12px;">Status</th>
+                <th style="color:rgba(255,255,255,0.45); font-size:0.75rem; text-transform:uppercase;
+                           letter-spacing:0.8px; font-weight:500; padding:8px 12px;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for slot in all_slots %}
+              <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:12px 12px; vertical-align:middle; font-size:0.88rem;">
+                  {{ slot.date|date:"D, d M Y" }}
+                </td>
+                <td style="padding:12px 12px; vertical-align:middle;">
+                  <span style="background:rgba(30,110,200,0.3); color:#7EB8F7;
+                               border-radius:20px; padding:4px 12px; font-size:0.82rem; font-weight:600;">
+                    <i class="bi bi-clock me-1"></i>{{ slot.time|time:"g:i A" }}
+                  </span>
+                </td>
+                <td style="padding:12px 12px; vertical-align:middle;">
+                  {% if slot.is_booked %}
+                  <span style="background:rgba(229,62,62,0.2); color:#FC8181;
+                               border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:600;">
+                    Booked
+                  </span>
+                  {% else %}
+                  <span style="background:rgba(56,161,105,0.2); color:#68D391;
+                               border-radius:20px; padding:4px 12px; font-size:0.8rem; font-weight:600;">
+                    Available
+                  </span>
+                  {% endif %}
+                </td>
+                <td style="padding:12px 12px; vertical-align:middle;">
+                  {% if not slot.is_booked %}
+                  <a href="/doctor/delete-slot/{{ slot.id }}/"
+                     onclick="return confirm('Delete this slot?')"
+                     style="background:rgba(229,62,62,0.2); color:#FC8181;
+                            border:1px solid rgba(229,62,62,0.3); border-radius:8px;
+                            padding:5px 14px; font-size:0.8rem; font-weight:600;
+                            text-decoration:none;">
+                    <i class="bi bi-trash me-1"></i>Remove
+                  </a>
+                  {% else %}
+                  <span style="color:rgba(255,255,255,0.25); font-size:0.82rem;">—</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div style="text-align:center; padding:40px 20px;">
+          <div style="font-size:2.5rem; margin-bottom:10px; opacity:0.4;">🕐</div>
+          <p style="color:rgba(255,255,255,0.4); font-size:0.9rem; margin:0;">
+            No upcoming slots. Add one above!
+          </p>
+        </div>
+        {% endif %}
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+function toggleAddSlot() {
+  const form = document.getElementById('addSlotForm');
+  form.style.display = form.style.display === 'none' ? 'block' : 'none';
+}
+</script>
+
+{% endblock %}

@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block title %}Find Doctors{% endblock %}
+
+{% block content %}
+<div style="background-color:#2B5CE6;" class="py-4">
+    <div class="container text-white">
+        <h3 class="fw-bold">Find a Doctor</h3>
+        <p class="mb-0">Choose from our verified specialists</p>
+    </div>
+</div>
+
+<div class="container my-4">
+    <div class="row">
+        
+        <!-- LEFT: Filters -->
+        <div class="col-md-3">
+            <div class="card border-0 shadow-sm p-3">
+                <h6 class="fw-bold text-primary mb-3">Specializations</h6>
+                <a href="/doctors/" 
+                   class="d-block mb-2 text-decoration-none 
+                   {% if not selected_spec %}fw-bold text-primary{% else %}text-dark{% endif %}">
+                    All Doctors
+                </a>
+                {% for spec in specializations %}
+                <a href="/doctors/?spec={{ spec.name }}" 
+                   class="d-block mb-2 text-decoration-none
+                   {% if selected_spec == spec.name %}fw-bold text-primary{% else %}text-dark{% endif %}">
+                    {{ spec.icon }} {{ spec.name }}
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- RIGHT: Doctor Cards -->
+        <div class="col-md-9">
+            
+            <!-- Search bar -->
+            <div class="input-group mb-4">
+                <input type="text" id="searchInput" 
+                       class="form-control" 
+                       placeholder="Search doctor name or specialization..."
+                       value="{{ request.GET.search|default:'' }}">
+                <button class="btn btn-primary" onclick="searchDoctor()">
+                    Search
+                </button>
+            </div>
+
+            {% if doctors %}
+            {% for doctor in doctors %}
+            <div class="card border-0 shadow-sm mb-3 p-3">
+                <div class="row align-items-center">
+                    <div class="col-2 text-center">
+                        <div style="width:70px; height:70px; background:#EEF2FF; 
+                                    border-radius:50%; display:flex; 
+                                    align-items:center; justify-content:center;
+                                    font-size:2rem; margin:auto;">
+                            👨‍⚕️
+                        </div>
+                    </div>
+                    <div class="col-7">
+                        <h5 class="fw-bold mb-1">Dr. {{ doctor.name }}</h5>
+                        <p class="text-primary mb-1">
+                            {{ doctor.specialization.icon }} {{ doctor.specialization.name }}
+                        </p>
+                        <p class="text-muted small mb-1">
+                            {{ doctor.qualification }} • {{ doctor.experience }} years exp
+                        </p>
+                        <span class="badge bg-success">✓ Available</span>
+                    </div>
+                    <div class="col-3 text-end">
+                        <p class="fw-bold text-primary mb-2">₹{{ doctor.fee }}</p>
+                        <a href="/doctors/{{ doctor.id }}/" 
+                           class="btn btn-primary btn-sm">
+                            Book Now
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            {% else %}
+            <div class="text-center py-5">
+                <span style="font-size:4rem;">🔍</span>
+                <h5 class="mt-3 text-muted">No doctors found</h5>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function searchDoctor() {
+    const q = document.getElementById('searchInput').value;
+    window.location.href = `/doctors/?search=${q}`;
+}
+</script>
+{% endblock %}

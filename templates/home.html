@@ -1,0 +1,335 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Home — Your Health, Our Priority{% endblock %}
+
+{% block content %}
+
+<!-- HERO -->
+<div style="background: linear-gradient(135deg, #1A73E8 0%, #1557B0 40%, #0D4A8E 70%, #1595AA 100%);
+            padding: 80px 0 100px; position: relative; overflow: hidden;">
+    <div class="container position-relative" style="z-index:2;">
+        <div class="row align-items-center">
+            <div class="col-lg-7 text-white">
+                <div class="fade-in">
+                    <span class="badge mb-3 px-3 py-2"
+                          style="background:rgba(255,255,255,0.2); 
+                                 border-radius:20px; font-size:0.85rem;">
+                        🏥 Trusted Healthcare Platform
+                    </span>
+                    <h1 class="display-5 fw-800 mb-3" style="font-weight:800; line-height:1.2;">
+                        Your Health,<br>Our Priority
+                    </h1>
+                    <p class="fs-5 mb-4 opacity-90">
+                        Book appointments with top specialists, 
+                        get AI-powered health guidance, and manage 
+                        your health journey — all in one place.
+                    </p>
+                    
+                    <!-- Search -->
+                    <div class="input-group mb-4" style="max-width:520px;">
+                        <span class="input-group-text bg-white border-0 ps-4">
+                            <i class="bi bi-search text-primary"></i>
+                        </span>
+                        <input type="text" id="searchInput"
+                               class="form-control search-bar border-0 py-3"
+                               placeholder="Search doctors, specializations..."
+                               style="border-radius:0 !important;">
+                        <button class="btn btn-warning fw-bold px-4 search-btn"
+                                onclick="searchDoctor()">
+                            Search
+                        </button>
+                    </div>
+
+                    <!-- Stats -->
+                    <div class="d-flex gap-4 flex-wrap">
+                        <div class="text-white">
+                            <div class="fw-800 fs-4" style="font-weight:800;">50+</div>
+                            <div class="opacity-75 small">Specialist Doctors</div>
+                        </div>
+                        <div class="text-white">
+                            <div class="fw-800 fs-4" style="font-weight:800;">1000+</div>
+                            <div class="opacity-75 small">Happy Patients</div>
+                        </div>
+                        <div class="text-white">
+                            <div class="fw-800 fs-4" style="font-weight:800;">24/7</div>
+                            <div class="opacity-75 small">AI Support</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5 d-none d-lg-block text-center">
+                <div style="font-size:12rem; opacity:0.15; 
+                            position:absolute; right:0; top:50%;
+                            transform:translateY(-50%);">
+                    🏥
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="container mt-4">
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="glass-card card p-4 card-hover">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:52px; height:52px; 
+                                background:linear-gradient(135deg,#EEF4FF,#dbeafe);
+                                border-radius:12px; display:flex;
+                                align-items:center; justify-content:center;
+                                font-size:1.5rem;">
+                        🏨
+                    </div>
+                    <div>
+                        <h6 class="fw-700 mb-1" style="font-weight:700;">
+                            Book Appointment
+                        </h6>
+                        <p class="text-muted small mb-2">
+                            In-person doctor visit
+                        </p>
+                        <a href="/doctors/" 
+                           class="btn btn-primary btn-sm px-3">
+                            Book Now →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card card p-4 card-hover">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:52px; height:52px;
+                                background:linear-gradient(135deg,#F0FDF4,#dcfce7);
+                                border-radius:12px; display:flex;
+                                align-items:center; justify-content:center;
+                                font-size:1.5rem;">
+                        🤖
+                    </div>
+                    <div>
+                        <h6 class="fw-700 mb-1" style="font-weight:700;">
+                            AI Symptom Check
+                        </h6>
+                        <p class="text-muted small mb-2">
+                            Get instant AI guidance
+                        </p>
+                        <a href="/chatbot/" 
+                           class="btn btn-accent btn-sm px-3">
+                            Try Now →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="glass-card card p-4 card-hover">
+                <div class="d-flex align-items-center gap-3">
+                    <div style="width:52px; height:52px;
+                                background:linear-gradient(135deg,#FFF7ED,#ffedd5);
+                                border-radius:12px; display:flex;
+                                align-items:center; justify-content:center;
+                                font-size:1.5rem;">
+                        🧠
+                    </div>
+                    <div>
+                        <h6 class="fw-700 mb-1" style="font-weight:700;">
+                            Health Quiz
+                        </h6>
+                        <p class="text-muted small mb-2">
+                            Test health knowledge
+                        </p>
+                        <a href="/quiz/" 
+                           class="btn btn-warning btn-sm px-3 text-dark fw-600">
+                            Start →
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SPECIALIZATIONS -->
+<div class="container my-5">
+    <div class="text-center mb-4">
+        <h2 class="section-title">Find a Doctor by Specialization</h2>
+        <p class="section-subtitle">
+            Choose from our wide range of verified specialists
+        </p>
+    </div>
+    <div class="row g-3">
+        {% for spec in specializations %}
+        <div class="col-6 col-md-3 col-lg-2">
+            <a href="/doctors/?spec={{ spec.name }}" 
+               class="text-decoration-none">
+                <div class="spec-card card-hover">
+                    <span class="spec-icon">{{ spec.icon }}</span>
+                    <p class="fw-600 mb-0 text-dark small" 
+                       style="font-weight:600; font-size:0.85rem;">
+                        {{ spec.name }}
+                    </p>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<!-- AI SECTION -->
+<div style="background:linear-gradient(135deg, #F0F7FF, #EEF4FF);" 
+     class="py-5" id="ai-section">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-5">
+                <span class="badge bg-primary mb-3 px-3 py-2"
+                      style="border-radius:20px;">
+                    🤖 AI Powered
+                </span>
+                <h2 class="section-title">
+                    Not Sure Which Doctor to See?
+                </h2>
+                <p class="text-muted mb-4">
+                    Describe your symptoms to our AI assistant and 
+                    get instant recommendations on which specialist 
+                    to consult. Available 24/7, completely free.
+                </p>
+                <div class="d-flex gap-3 flex-wrap">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span class="small">Instant response</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span class="small">100% free</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-check-circle-fill text-success"></i>
+                        <span class="small">24/7 available</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="glass-card card p-4">
+                    <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+                        <div style="width:42px; height:42px;
+                                    background:linear-gradient(135deg,#1A73E8,#1557B0);
+                                    border-radius:50%; display:flex;
+                                    align-items:center; justify-content:center;
+                                    font-size:1.2rem;">
+                            🤖
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">DocPro AI Assistant</h6>
+                            <small class="text-success">
+                                <i class="bi bi-circle-fill me-1" 
+                                   style="font-size:0.5rem;"></i>Online
+                            </small>
+                        </div>
+                    </div>
+
+                    <textarea id="symptomInput" 
+                              class="form-control mb-3" rows="3"
+                              placeholder="e.g. I have chest pain and difficulty breathing for 2 days...">
+                    </textarea>
+
+                    <button class="btn btn-primary w-100 py-2 fw-600"
+                            onclick="checkSymptoms()"
+                            style="font-weight:600;">
+                        <i class="bi bi-robot me-2"></i>
+                        Get AI Suggestion
+                    </button>
+
+                    <div id="aiResponse" class="mt-3" style="display:none;">
+                        <div class="p-3 rounded-3"
+                             style="background:#EEF4FF; border-left:4px solid #1A73E8;">
+                            <div class="d-flex gap-2 mb-1">
+                                <span>🤖</span>
+                                <strong class="text-primary small">AI Suggestion</strong>
+                            </div>
+                            <p id="aiText" class="mb-0 small"></p>
+                        </div>
+                    </div>
+
+                    <p class="text-muted text-center mt-3 mb-0" 
+                       style="font-size:0.75rem;">
+                        ⚠️ AI suggestions are not a substitute for medical diagnosis
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- WHY DOCPRO -->
+<div class="container my-5">
+    <div class="text-center mb-4">
+        <h2 class="section-title">Why Choose DocPro?</h2>
+        <p class="section-subtitle">Everything you need for better healthcare</p>
+    </div>
+    <div class="row g-4">
+        {% for feature in features %}
+        <div class="col-md-3">
+            <div class="stat-card text-center card-hover">
+                <div style="font-size:2.5rem; margin-bottom:12px;">
+                    {{ feature.icon }}
+                </div>
+                <h6 class="fw-700" style="font-weight:700;">
+                    {{ feature.title }}
+                </h6>
+                <p class="text-muted small mb-0">{{ feature.desc }}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function searchDoctor() {
+    const query = document.getElementById('searchInput').value.trim();
+    if(query) window.location.href = `/doctors/?search=${query}`;
+}
+
+document.getElementById('searchInput').addEventListener('keypress', function(e) {
+    if(e.key === 'Enter') searchDoctor();
+});
+
+function getCookie(name) {
+    let c = null;
+    document.cookie.split(';').forEach(cookie => {
+        const [k,v] = cookie.trim().split('=');
+        if(k === name) c = decodeURIComponent(v);
+    });
+    return c;
+}
+
+function checkSymptoms() {
+    const symptoms = document.getElementById('symptomInput').value.trim();
+    if(!symptoms) { alert('Please describe your symptoms!'); return; }
+    
+    document.getElementById('aiResponse').style.display = 'block';
+    document.getElementById('aiText').innerHTML = '⏳ Analyzing...';
+    
+    fetch('/ai-symptom-check/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+        },
+        body: JSON.stringify({symptoms})
+    })
+    .then(r => r.json())
+    .then(d => {
+        document.getElementById('aiText').innerHTML = 
+            d.suggestion.replace(/\n/g, '<br>');
+    })
+    .catch(() => {
+        document.getElementById('aiText').innerHTML = 
+            '❌ AI unavailable. Please try again.';
+    });
+}
+</script>
+{% endblock %}

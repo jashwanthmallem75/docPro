@@ -1,0 +1,581 @@
+{% extends 'base.html' %}
+{% block title %}My Appointments{% endblock %}
+
+{% block content %}
+
+<!-- PAGE HEADER -->
+<div class="appt-header">
+    <div class="appt-header-bg"></div>
+    <div class="container position-relative" style="z-index:2;">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="header-icon">📅</div>
+                    <div>
+                        <h2 class="fw-800 text-white mb-0" style="font-weight:800;">
+                            My Appointments
+                        </h2>
+                        <p class="text-white mb-0" style="opacity:0.8; font-size:0.95rem;">
+                            Track and manage all your medical visits
+                        </p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="/doctors/" class="btn btn-book-new">
+                    <i class="bi bi-plus-lg me-2"></i>Book New Appointment
+                </a>
+            </div>
+        </div>
+
+        <!-- STATS ROW -->
+        <div class="row g-3 mt-3">
+            <div class="col-4">
+                <div class="appt-stat-pill">
+                    <span class="stat-num" id="totalCount">0</span>
+                    <span class="stat-lbl">Total</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="appt-stat-pill">
+                    <span class="stat-num text-success" id="confirmedCount">0</span>
+                    <span class="stat-lbl">Confirmed</span>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="appt-stat-pill">
+                    <span class="stat-num text-danger" id="cancelledCount">0</span>
+                    <span class="stat-lbl">Cancelled</span>
+                </div>
+            </div>
+            {% if apt.status == 'Confirmed' %}
+<button class="btn btn-sm btn-outline-warning ms-2"
+        data-bs-toggle="modal"
+        data-bs-target="#rescheduleModal{{ apt.id }}">
+  🔄 Reschedule
+</button>
+
+<!-- Reschedule Modal -->
+<div class="modal fade" id="rescheduleModal{{ apt.id }}" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Reschedule Appointment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="post" action="/appointments/reschedule/{{ apt.id }}/">
+        {% csrf_token %}
+        <div class="modal-body">
+          <label class="form-label fw-semibold">Select new slot for Dr. {{ apt.slot.doctor.name }}</label>
+          <select name="new_slot_id" class="form-select" required>
+            {% for slot in apt.slot.doctor.slot_set.all %}
+              {% if not slot.is_booked and slot.date >= today %}
+              <option value="{{ slot.id }}">{{ slot.date }} — {{ slot.time|time:"g:i A" }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-warning fw-bold">Confirm Reschedule</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container py-4">
+
+    <!-- MESSAGES -->
+    {% if messages %}
+    {% for msg in messages %}
+    <div class="alert custom-alert alert-{{ msg.tags }} alert-dismissible fade show mb-4" role="alert">
+        {% if msg.tags == 'success' %}✅{% elif msg.tags == 'error' or msg.tags == 'danger' %}❌{% else %}ℹ️{% endif %}
+        {{ msg }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    {% if appointments %}
+
+    <!-- FILTER TABS -->
+    <div class="filter-tabs mb-4">
+        <button class="filter-btn active" onclick="filterAppts('all', this)">
+            All
+        </button>
+        <button class="filter-btn" onclick="filterAppts('Confirmed', this)">
+            <span class="dot dot-green"></span>Upcoming
+        </button>
+        <button class="filter-btn" onclick="filterAppts('Completed', this)">
+            <span class="dot dot-blue"></span>Completed
+        </button>
+        <button class="filter-btn" onclick="filterAppts('Cancelled', this)">
+            <span class="dot dot-red"></span>Cancelled
+        </button>
+    </div>
+
+    <!-- APPOINTMENTS LIST -->
+    <div id="apptList">
+        {% for apt in appointments %}
+        <div class="appt-card mb-3 fade-in-card"
+             data-status="{{ apt.status }}"
+             style="animation-delay: {{ forloop.counter0 }}00ms;">
+
+            <div class="row align-items-center g-0">
+
+                <!-- LEFT: Doctor Avatar + Status Strip -->
+                <div class="col-auto">
+                    <div class="appt-left-strip 
+                        {% if apt.status == 'Confirmed' %}strip-green
+                        {% elif apt.status == 'Cancelled' %}strip-red
+                        {% else %}strip-blue{% endif %}">
+                    </div>
+                </div>
+
+                <!-- DOCTOR AVATAR -->
+                <div class="col-auto px-3 py-3">
+                    <div class="doc-avatar-lg">
+                        <span>👨‍⚕️</span>
+                    </div>
+                </div>
+
+                <!-- MIDDLE: Info -->
+                <div class="col py-3 pe-3">
+                    <div class="row align-items-center">
+                        <div class="col-md-5">
+                            <h5 class="fw-700 mb-1" style="font-weight:700; font-size:1rem;">
+                                Dr. {{ apt.slot.doctor.name }}
+                            </h5>
+                            <p class="mb-1" style="color: var(--primary); font-size:0.85rem; font-weight:600;">
+                                {{ apt.slot.doctor.specialization.icon }}
+                                {{ apt.slot.doctor.specialization.name }}
+                            </p>
+                            <p class="text-muted mb-0" style="font-size:0.8rem;">
+                                🎓 {{ apt.slot.doctor.qualification }}
+                            </p>
+                        </div>
+
+                        <div class="col-md-4 mt-2 mt-md-0">
+                            <!-- Date Pill -->
+                            <div class="info-pill mb-2">
+                                <i class="bi bi-calendar3 text-primary me-2"></i>
+                                <span>{{ apt.slot.date|date:"D, d M Y" }}</span>
+                            </div>
+                            <!-- Time Pill -->
+                            <div class="info-pill mb-2">
+                                <i class="bi bi-clock text-primary me-2"></i>
+                                <span>{{ apt.slot.time|time:"g:i A" }}</span>
+                            </div>
+                            <!-- Fee Pill -->
+                            <div class="info-pill">
+                                <i class="bi bi-currency-rupee text-success me-1"></i>
+                                <span class="text-success fw-600" style="font-weight:600;">
+                                    {{ apt.slot.doctor.fee }} Paid
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-3 mt-3 mt-md-0 text-md-end">
+                            <!-- STATUS BADGE -->
+                            {% if apt.status == 'Confirmed' %}
+                            <div class="status-badge status-confirmed mb-3">
+                                <span class="pulse-dot"></span>
+                                Confirmed
+                            </div>
+                            {% elif apt.status == 'Cancelled' %}
+                            <div class="status-badge status-cancelled mb-3">
+                                ✗ Cancelled
+                            </div>
+                            {% else %}
+                            <div class="status-badge status-completed mb-3">
+                                ✓ Completed
+                            </div>
+                            {% endif %}
+
+                            <!-- ACTIONS -->
+                            {% if apt.status == 'Confirmed' %}
+                            <a href="/appointments/cancel/{{ apt.id }}/"
+                               class="btn btn-cancel-apt"
+                               onclick="return confirm('Are you sure you want to cancel this appointment with Dr. {{ apt.slot.doctor.name }}?')">
+                                <i class="bi bi-x-circle me-1"></i>Cancel
+                            </a>
+                            {% endif %}
+
+                            <!-- Appointment ID -->
+                            <div class="apt-id mt-2">
+                                #APT-{{ apt.id|stringformat:"04d" }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NOTES -->
+                    {% if apt.notes %}
+                    <div class="notes-strip mt-2">
+                        <i class="bi bi-journal-text me-2 text-primary"></i>
+                        <span class="text-muted" style="font-size:0.85rem;">
+                            {{ apt.notes }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    <!-- PAYMENT ID -->
+                    {% if apt.payment_id %}
+                    <div class="notes-strip mt-1">
+                        <i class="bi bi-credit-card me-2 text-success"></i>
+                        <span class="text-muted" style="font-size:0.8rem;">
+                            Payment: {{ apt.payment_id }}
+                        </span>
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- NO RESULTS (after filter) -->
+    <div id="noResults" style="display:none;" class="text-center py-5">
+        <div style="font-size:4rem;">🔍</div>
+        <h5 class="text-muted mt-3">No appointments found for this filter</h5>
+        <button class="btn btn-outline-primary btn-sm mt-2"
+                onclick="filterAppts('all', document.querySelector('.filter-btn'))">
+            Show All
+        </button>
+    </div>
+
+    {% else %}
+
+    <!-- EMPTY STATE -->
+    <div class="empty-state">
+        <div class="empty-icon">📋</div>
+        <h4 class="fw-700 mt-4 mb-2" style="font-weight:700;">
+            No appointments yet!
+        </h4>
+        <p class="text-muted mb-4">
+            Book your first appointment with one of our specialists
+        </p>
+        <a href="/doctors/" class="btn btn-primary px-5 py-2">
+            <i class="bi bi-search me-2"></i>Find a Doctor
+        </a>
+        <div class="mt-5">
+            <div class="row g-3 justify-content-center">
+                <div class="col-md-3">
+                    <div class="empty-tip">
+                        <div style="font-size:1.8rem;">🤖</div>
+                        <p class="small text-muted mt-2 mb-0">
+                            Use AI to find the right doctor
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="empty-tip">
+                        <div style="font-size:1.8rem;">📅</div>
+                        <p class="small text-muted mt-2 mb-0">
+                            Pick from available time slots
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="empty-tip">
+                        <div style="font-size:1.8rem;">✅</div>
+                        <p class="small text-muted mt-2 mb-0">
+                            Get email confirmation instantly
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<!-- PAGE SPECIFIC STYLES -->
+<style>
+/* ── Header ── */
+.appt-header {
+    background: linear-gradient(135deg, #1A73E8 0%, #0D47A1 100%);
+    padding: 36px 0 50px;
+    position: relative;
+    overflow: hidden;
+}
+.appt-header-bg {
+    position: absolute;
+    inset: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.04'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+}
+.header-icon {
+    width: 52px; height: 52px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 14px;
+    display: flex; align-items: center;
+    justify-content: center;
+    font-size: 1.6rem;
+    backdrop-filter: blur(10px);
+}
+.appt-stat-pill {
+    background: rgba(255,255,255,0.12);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    padding: 12px 16px;
+    display: flex; flex-direction: column;
+    align-items: center;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+.stat-num {
+    font-size: 1.5rem; font-weight: 800;
+    color: white; line-height: 1;
+}
+.stat-lbl {
+    font-size: 0.72rem; color: rgba(255,255,255,0.75);
+    margin-top: 3px; font-weight: 500;
+}
+.btn-book-new {
+    background: rgba(255,255,255,0.15) !important;
+    color: white !important;
+    border: 2px solid rgba(255,255,255,0.4) !important;
+    border-radius: 10px !important;
+    font-weight: 600 !important;
+    padding: 10px 20px !important;
+    backdrop-filter: blur(10px);
+    transition: all 0.2s !important;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-book-new:hover {
+    background: rgba(255,255,255,0.25) !important;
+    border-color: rgba(255,255,255,0.6) !important;
+    transform: translateY(-1px);
+}
+
+/* ── Filter Tabs ── */
+.filter-tabs {
+    display: flex; gap: 8px; flex-wrap: wrap;
+}
+.filter-btn {
+    background: white; border: 1.5px solid #E5E7EB;
+    border-radius: 20px; padding: 7px 18px;
+    font-size: 0.85rem; font-weight: 600;
+    color: #6B7280; cursor: pointer;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 6px;
+}
+.filter-btn:hover, .filter-btn.active {
+    background: var(--primary-light);
+    border-color: var(--primary);
+    color: var(--primary);
+}
+.dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+.dot-green { background:#10b981; }
+.dot-blue  { background:#3b82f6; }
+.dot-red   { background:#ef4444; }
+
+/* ── Appointment Card ── */
+.appt-card {
+    background: white;
+    border-radius: 16px !important;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(26,115,232,0.08);
+    transition: all 0.25s;
+    border: 1px solid #F0F4FF !important;
+}
+.appt-card:hover {
+    box-shadow: 0 6px 24px rgba(26,115,232,0.14) !important;
+    transform: translateY(-2px);
+}
+.appt-left-strip {
+    width: 5px; height: 100%;
+    min-height: 120px;
+}
+.strip-green { background: linear-gradient(180deg, #10b981, #059669); }
+.strip-red   { background: linear-gradient(180deg, #ef4444, #dc2626); }
+.strip-blue  { background: linear-gradient(180deg, #3b82f6, #2563eb); }
+
+/* ── Doctor Avatar ── */
+.doc-avatar-lg {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #EEF4FF, #dbeafe);
+    border-radius: 16px;
+    display: flex; align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+/* ── Info Pills ── */
+.info-pill {
+    display: inline-flex; align-items: center;
+    background: #F8F9FF;
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.82rem;
+    font-weight: 500;
+    color: #374151;
+}
+
+/* ── Status Badges ── */
+.status-badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 14px; border-radius: 20px;
+    font-size: 0.78rem; font-weight: 700;
+    letter-spacing: 0.3px;
+}
+.status-confirmed {
+    background: linear-gradient(135deg, #D1FAE5, #A7F3D0);
+    color: #065F46;
+}
+.status-cancelled {
+    background: linear-gradient(135deg, #FEE2E2, #FECACA);
+    color: #991B1B;
+}
+.status-completed {
+    background: linear-gradient(135deg, #DBEAFE, #BFDBFE);
+    color: #1E40AF;
+}
+
+/* Pulse dot for confirmed */
+.pulse-dot {
+    width: 7px; height: 7px;
+    background: #10b981;
+    border-radius: 50%;
+    display: inline-block;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.4); opacity: 0.7; }
+}
+
+/* ── Cancel Button ── */
+.btn-cancel-apt {
+    background: #FEF2F2 !important;
+    color: #DC2626 !important;
+    border: 1.5px solid #FECACA !important;
+    border-radius: 8px !important;
+    padding: 6px 14px !important;
+    font-size: 0.8rem !important;
+    font-weight: 600 !important;
+    transition: all 0.2s !important;
+    text-decoration: none;
+    display: inline-block;
+}
+.btn-cancel-apt:hover {
+    background: #FEE2E2 !important;
+    border-color: #DC2626 !important;
+}
+
+/* ── Apt ID ── */
+.apt-id {
+    font-size: 0.72rem;
+    color: #9CA3AF;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+/* ── Notes Strip ── */
+.notes-strip {
+    background: #F8F9FF;
+    border-radius: 8px;
+    padding: 8px 14px;
+    display: flex; align-items: flex-start;
+}
+
+/* ── Empty State ── */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    background: white;
+    border-radius: 20px;
+    box-shadow: 0 2px 20px rgba(26,115,232,0.06);
+}
+.empty-icon {
+    font-size: 5rem;
+    animation: float 3s ease-in-out infinite;
+}
+@keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-12px); }
+}
+.empty-tip {
+    background: #F8F9FF;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+}
+
+/* ── Custom Alert ── */
+.custom-alert {
+    border-radius: 12px !important;
+    border: none !important;
+    font-weight: 500;
+}
+
+/* ── Animations ── */
+@keyframes fadeInCard {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+.fade-in-card {
+    animation: fadeInCard 0.4s ease forwards;
+    opacity: 0;
+}
+</style>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Count stats on load
+document.addEventListener('DOMContentLoaded', function() {
+    const cards = document.querySelectorAll('.appt-card');
+    let total = cards.length;
+    let confirmed = 0, cancelled = 0;
+
+    cards.forEach(c => {
+        const s = c.dataset.status;
+        if(s === 'Confirmed') confirmed++;
+        if(s === 'Cancelled') cancelled++;
+    });
+
+    animateCount('totalCount', total);
+    animateCount('confirmedCount', confirmed);
+    animateCount('cancelledCount', cancelled);
+});
+
+function animateCount(id, target) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    let count = 0;
+    const step = Math.ceil(target / 20);
+    const timer = setInterval(() => {
+        count = Math.min(count + step, target);
+        el.textContent = count;
+        if(count >= target) clearInterval(timer);
+    }, 50);
+}
+
+function filterAppts(status, btn) {
+    // Update active tab
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+
+    const cards = document.querySelectorAll('.appt-card');
+    let visible = 0;
+
+    cards.forEach(card => {
+        const show = status === 'all' || card.dataset.status === status;
+        card.style.display = show ? 'block' : 'none';
+        if(show) visible++;
+    });
+
+    document.getElementById('noResults').style.display =
+        visible === 0 ? 'block' : 'none';
+}
+</script>
+{% endblock %}

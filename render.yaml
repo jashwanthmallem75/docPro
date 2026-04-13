@@ -1,0 +1,7 @@
+services:
+  - type: web
+    name: docpro
+    env: python
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn docPro.wsgi:application"
+    plan: free
