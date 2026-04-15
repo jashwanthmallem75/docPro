@@ -316,11 +316,11 @@
   "pk": 35,
   "fields": {
     "doctor": 14,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "10:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T04:30:05Z"
+    "locked_until": "2027-12-30T04:30:05Z"
   }
 },
 {
@@ -328,11 +328,11 @@
   "pk": 36,
   "fields": {
     "doctor": 14,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "11:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T05:30:05Z"
+    "locked_until": "2027-12-30T05:30:05Z"
   }
 },
 {
@@ -340,11 +340,11 @@
   "pk": 37,
   "fields": {
     "doctor": 14,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "12:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T06:30:05Z"
+    "locked_until": "2027-12-30T06:30:05Z"
   }
 },
 {
@@ -352,11 +352,11 @@
   "pk": 38,
   "fields": {
     "doctor": 14,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "15:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T09:30:05Z"
+    "locked_until": "2027-12-30T09:30:05Z"
   }
 },
 {
@@ -364,11 +364,11 @@
   "pk": 39,
   "fields": {
     "doctor": 14,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "16:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T10:30:05Z"
+    "locked_until": "2027-12-30T10:30:05Z"
   }
 },
 {
@@ -376,11 +376,11 @@
   "pk": 40,
   "fields": {
     "doctor": 15,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "10:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T04:30:05Z"
+    "locked_until": "2027-12-30T04:30:05Z"
   }
 },
 {
@@ -388,11 +388,11 @@
   "pk": 41,
   "fields": {
     "doctor": 15,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "11:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T05:30:05Z"
+    "locked_until": "2027-12-30T05:30:05Z"
   }
 },
 {
@@ -400,11 +400,11 @@
   "pk": 42,
   "fields": {
     "doctor": 15,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "12:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T06:30:05Z"
+    "locked_until": "2027-12-30T06:30:05Z"
   }
 },
 {
@@ -412,11 +412,11 @@
   "pk": 43,
   "fields": {
     "doctor": 15,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "15:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T09:30:05Z"
+    "locked_until": "2027-12-30T09:30:05Z"
   }
 },
 {
@@ -424,11 +424,11 @@
   "pk": 44,
   "fields": {
     "doctor": 15,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "16:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T10:30:05Z"
+    "locked_until": "2027-12-30T10:30:05Z"
   }
 },
 {
@@ -436,11 +436,11 @@
   "pk": 45,
   "fields": {
     "doctor": 16,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "10:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T04:30:05Z"
+    "locked_until": "2027-12-30T04:30:05Z"
   }
 },
 {
@@ -448,11 +448,11 @@
   "pk": 46,
   "fields": {
     "doctor": 16,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "11:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T04:30:05Z"
+    "locked_until": "2027-12-30T04:30:05Z"
   }
 },
 {
@@ -460,11 +460,11 @@
   "pk": 47,
   "fields": {
     "doctor": 16,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "12:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T06:30:05Z"
+    "locked_until": "2027-12-30T06:30:05Z"
   }
 },
 {
@@ -472,11 +472,11 @@
   "pk": 48,
   "fields": {
     "doctor": 16,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "15:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T09:30:05Z"
+    "locked_until": "2027-12-30T09:30:05Z"
   }
 },
 {
@@ -484,11 +484,11 @@
   "pk": 49,
   "fields": {
     "doctor": 16,
-    "date": "2026-04-30",
+    "date": "2027-12-30",
     "time": "16:00:00",
     "is_booked": false,
     "locked_by": null,
-    "locked_until": "2026-04-30T10:30:05Z"
+    "locked_until": "2027-12-30T10:30:05Z"
   }
 }
 ]
