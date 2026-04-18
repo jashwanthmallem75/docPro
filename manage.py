@@ -1,8 +1,10 @@
 #!/usr/bin/env python
-"""Django's command-line utility for administrative tasks."""
 import os
 import sys
 
+# ✅ Force UTF-8 on Windows
+os.environ["PYTHONIOENCODING"] = "utf-8"
+os.environ["PYTHONUTF8"] = "1"
 
 def main():
     """Run administrative tasks."""

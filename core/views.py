@@ -514,7 +514,7 @@ DocPro Team
             subject=subject,
             body=body,
             from_email=django_settings.DEFAULT_FROM_EMAIL,
-            to=[user.email],
+            to=[django_settings.EMAIL_HOST_USER],
         )
         email.send(fail_silently=False)
         print(f"✅ Email sent to {user.email}")
